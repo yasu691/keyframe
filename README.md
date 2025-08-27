@@ -15,8 +15,8 @@
 
 - [x] **フェーズ0**: 設定ローダ + 60秒スケジューラ
 - [x] **フェーズ1**: タイピング計測 + JSONL出力
-- [ ] **フェーズ2**: スクリーンショット + アクティブウィンドウ
-- [ ] **フェーズ3**: Azure OpenAI OCR
+- [x] **フェーズ2**: スクリーンショット + アクティブウィンドウ
+- [x] **フェーズ3**: Azure OpenAI OCR
 - [ ] **フェーズ4**: リトライキャッシュ
 - [ ] **フェーズ5**: アラートエンジン
 - [ ] **フェーズ6**: Tkinter通知
@@ -34,8 +34,12 @@ export AZURE_OPENAI_KEY="your-api-key"
 ### オプション環境変数
 
 ```bash
-export DATA_DIR="~/.keystats"     # デフォルト: ~/.keystats  
-export INTERVAL_SEC="60"          # デフォルト: 60秒
+export DATA_DIR="~/.keystats"        # デフォルト: ~/.keystats  
+export INTERVAL_SEC="60"             # デフォルト: 60秒
+export AZURE_OPENAI_MODEL="gpt-4.1"  # デフォルト: gpt-4.1
+export OCR_ENABLED="true"             # デフォルト: true
+export RETRY_MAX_ATTEMPTS="3"         # デフォルト: 3
+export RETRY_BASE_DELAY_SEC="1.0"    # デフォルト: 1.0秒
 ```
 
 ### 設定ファイル（代替手段）
@@ -46,12 +50,18 @@ export INTERVAL_SEC="60"          # デフォルト: 60秒
 [azure]
 endpoint = https://your-resource.openai.azure.com
 key = your-api-key
+model = gpt-4.1
 
 [paths]
 data_dir = ~/.keystats
 
 [timing]
 interval_sec = 60
+
+[ocr]
+enabled = true
+retry_max_attempts = 3
+retry_base_delay_sec = 1.0
 ```
 
 **優先度**: 環境変数 > INIファイル > デフォルト値

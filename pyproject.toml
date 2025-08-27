@@ -5,7 +5,11 @@ description = "調子とリズムを記録するタイピング・画面モニ�
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "mss>=10.1.0",
+    "openai>=1.102.0",
+    "pillow>=11.3.0",
     "pynput>=1.8.1",
+    "pyobjc-framework-cocoa>=11.1",
     "python-dotenv>=1.1.1",
     "ruff>=0.12.10",
     "ty>=0.0.1a19",

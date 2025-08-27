@@ -12,8 +12,12 @@ class Config:
     """アプリケーション設定なのだ"""
     azure_openai_endpoint: str
     azure_openai_key: str
+    azure_openai_model: str
     data_dir: Path
     interval_sec: int = 60
+    ocr_enabled: bool = True
+    retry_max_attempts: int = 3
+    retry_base_delay_sec: float = 1.0
 
 
 class ConfigLoader:
@@ -31,8 +35,12 @@ class ConfigLoader:
         defaults = {
             "azure_openai_endpoint": "",
             "azure_openai_key": "",
+            "azure_openai_model": "gpt-4.1-mini",
             "data_dir": str(Path.home() / ".keystats"),
-            "interval_sec": "60"
+            "interval_sec": "60",
+            "ocr_enabled": "true",
+            "retry_max_attempts": "3",
+            "retry_base_delay_sec": "1.0"
         }
         
         # INI ファイルから読み込みなのだ
@@ -49,8 +57,12 @@ class ConfigLoader:
         return Config(
             azure_openai_endpoint=config_values["azure_openai_endpoint"],
             azure_openai_key=config_values["azure_openai_key"],
+            azure_openai_model=config_values["azure_openai_model"],
             data_dir=Path(config_values["data_dir"]).expanduser(),
-            interval_sec=int(config_values["interval_sec"])
+            interval_sec=int(config_values["interval_sec"]),
+            ocr_enabled=config_values["ocr_enabled"].lower() in ("true", "1", "yes", "on"),
+            retry_max_attempts=int(config_values["retry_max_attempts"]),
+            retry_base_delay_sec=float(config_values["retry_base_delay_sec"])
         )
     
     def _load_from_ini(self) -> dict:
@@ -67,6 +79,8 @@ class ConfigLoader:
                 values['azure_openai_endpoint'] = azure['endpoint']
             if 'key' in azure:
                 values['azure_openai_key'] = azure['key']
+            if 'model' in azure:
+                values['azure_openai_model'] = azure['model']
         
         # [paths] セクションなのだ  
         if parser.has_section('paths'):
@@ -80,6 +94,16 @@ class ConfigLoader:
             if 'interval_sec' in timing:
                 values['interval_sec'] = timing['interval_sec']
         
+        # [ocr] セクションなのだ
+        if parser.has_section('ocr'):
+            ocr = parser['ocr']
+            if 'enabled' in ocr:
+                values['ocr_enabled'] = ocr['enabled']
+            if 'retry_max_attempts' in ocr:
+                values['retry_max_attempts'] = ocr['retry_max_attempts']
+            if 'retry_base_delay_sec' in ocr:
+                values['retry_base_delay_sec'] = ocr['retry_base_delay_sec']
+        
         return values
     
     def _load_from_env(self) -> dict:
@@ -88,9 +112,13 @@ class ConfigLoader:
         
         env_mapping = {
             "AZURE_OPENAI_ENDPOINT": "azure_openai_endpoint",
-            "AZURE_OPENAI_KEY": "azure_openai_key", 
+            "AZURE_OPENAI_KEY": "azure_openai_key",
+            "AZURE_OPENAI_MODEL": "azure_openai_model",
             "DATA_DIR": "data_dir",
-            "INTERVAL_SEC": "interval_sec"
+            "INTERVAL_SEC": "interval_sec",
+            "OCR_ENABLED": "ocr_enabled",
+            "RETRY_MAX_ATTEMPTS": "retry_max_attempts",
+            "RETRY_BASE_DELAY_SEC": "retry_base_delay_sec"
         }
         
         for env_key, config_key in env_mapping.items():
