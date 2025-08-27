@@ -5,6 +5,8 @@ description = "調子とリズムを記録するタイピング・画面モニ�
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "pynput>=1.8.1",
+    "python-dotenv>=1.1.1",
     "ruff>=0.12.10",
     "ty>=0.0.1a19",
 ]

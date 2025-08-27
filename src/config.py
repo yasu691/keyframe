@@ -4,6 +4,7 @@ import configparser
 from pathlib import Path
 from dataclasses import dataclass
 from typing import Optional
+from dotenv import load_dotenv
 
 
 @dataclass
@@ -18,8 +19,11 @@ class Config:
 class ConfigLoader:
     """設定読み込みクラス: env > ini > default の優先順位なのだ"""
     
-    def __init__(self, config_path: Optional[Path] = None):
+    def __init__(self, config_path: Optional[Path] = None, env_file: Optional[Path] = None):
+        """config_path: INIファイルパス。env_file: .envファイルパス(省略時はCWD/.env)"""
         self.config_path = config_path or Path.home() / ".keystats" / "config.ini"
+        # .env をロードして環境変数に展開なのだ（存在しなければ無視）
+        load_dotenv(dotenv_path=env_file, override=False)
     
     def load(self) -> Config:
         """設定を読み込んで Config オブジェクトを返すのだ"""

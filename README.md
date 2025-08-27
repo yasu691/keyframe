@@ -14,7 +14,7 @@
 ## 実装状況（段階的開発中）
 
 - [x] **フェーズ0**: 設定ローダ + 60秒スケジューラ
-- [ ] **フェーズ1**: タイピング計測 (OCR無し)
+- [x] **フェーズ1**: タイピング計測 + JSONL出力
 - [ ] **フェーズ2**: スクリーンショット + アクティブウィンドウ
 - [ ] **フェーズ3**: Azure OpenAI OCR
 - [ ] **フェーズ4**: リトライキャッシュ
@@ -58,28 +58,44 @@ interval_sec = 60
 
 ## インストール・実行
 
-### フェーズ0 プロトタイプ
+### 開発環境セットアップ
 
 ```bash
-# 開発環境セットアップ
-pip install -e ".[dev]"
+# パッケージインストール
+uv install
 
-# 設定例（必須）
-export AZURE_OPENAI_ENDPOINT="https://test.openai.azure.com"
-export AZURE_OPENAI_KEY="dummy-key-for-prototype"
+# 開発依存関係も含む
+uv add --dev pytest pytest-cov
+```
+
+### フェーズ1: タイピング計測
+
+```bash
+# 必須環境変数設定
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+export AZURE_OPENAI_KEY="your-api-key"
+
+# オプション環境変数
+export DATA_DIR="~/.keystats"     # デフォルト: ~/.keystats  
+export INTERVAL_SEC="60"          # デフォルト: 60秒
 
 # 実行
-python main.py
+uv run python main.py
 ```
+
+**macOS権限設定**: システム設定 > プライバシーとセキュリティ > アクセシビリティで許可が必要なのだ。権限なしでも実行は継続されるが、キー数は0になるのだ。
 
 ### テスト実行
 
 ```bash
 # 全テスト実行
-pytest
+uv run pytest
 
 # カバレッジ付き
-pytest --cov=src
+uv run pytest --cov=src
+
+# 特定テストのみ
+uv run pytest tests/test_integration.py -v
 ```
 
 ## アーキテクチャ
@@ -88,9 +104,39 @@ pytest --cov=src
 src/
 ├── config.py         # ConfigLoader: env > ini > default
 ├── scheduler.py      # TimeSlicer: 60秒定期実行
-├── (future phases)   # typing.py, ocr.py, alerts.py...
+├── keylogger.py      # KeyLogger: pynputでタイピング統計
+├── jsonl_writer.py   # JsonlWriter: 日別JSONL出力
+├── (future phases)   # ocr.py, alerts.py, notifications.py...
 └── main.py          # エントリーポイント
 ```
+
+## データ出力例
+
+フェーズ1では以下のJSONL形式でタイピング統計を記録するのだ:
+
+```json
+{
+  "ts_utc": "2025-08-27T10:00:00Z",
+  "interval_sec": 60,
+  "typing": {
+    "kpm": 132,           # Keys Per Minute
+    "kps15": 2.3,         # Keys Per Second (直近15秒)
+    "median_latency_ms": 95.0,  # キー間隔中央値
+    "backspace_pct": 4.1,       # Backspace比率 (%)
+    "idle": false,              # アイドル状態（30秒キーなし）
+    "total_keys_cum": 12345     # 累積キー数
+  },
+  "screen": {
+    "screenshot_path": null,    # フェーズ1では常にnull
+    "ocr_text": "",            # フェーズ1では空
+    "active_app": "",          # フェーズ1では空
+    "active_title": ""         # フェーズ1では空
+  },
+  "alerts": []                 # フェーズ1では空配列
+}
+```
+
+ファイルパス: `DATA_DIR/yyyy-mm-dd.jsonl` （日別）
 
 ## ライセンス
 
