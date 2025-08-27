@@ -98,6 +98,24 @@ uv run pytest --cov=src
 uv run pytest tests/test_integration.py -v
 ```
 
+### コード品質チェック
+
+```bash
+# Ruffでリント（自動修正付き）
+uv run ruff check --fix .
+
+# Ruffでフォーマット
+uv run ruff format .
+
+# Tyで型チェック
+uv run ty
+
+# 一括実行
+uv run ruff check --fix . && uv run ruff format . && uv run ty
+```
+
+**設定**: `pyproject.toml` に Ruff (リンタ・フォーマッタ) と Ty (型チェッカ) の設定を記載済みなのだ。
+
 ## アーキテクチャ
 
 ```
